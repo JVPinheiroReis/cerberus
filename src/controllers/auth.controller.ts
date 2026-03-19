@@ -6,15 +6,34 @@ export async function register(req: Request, res: Response) {
 
 	try {
 		const user = await authService.register(email, password);
-		return res.status(401).json(user);
+		return res.status(201).json(user);
 	} catch (err: any) {
-		if (err.message == "INVALID_CREDENTIALS") {
-			return res.status(400).json({ error: "Invalid credentials" });
-		}
-		if (err.message == "EMAIL_EXISTS") {
-			return res.status(409).json({ error: "Email already in use" });
-		}
+		switch (err.message) {
+			case "INVALID_CREDENTIALS":
+				return res.status(401).json({ error: "Invalid credentials" });
 
-		return res.status(500).json({ error: "Internal server error" });
+			case "EMAIL_EXISTS":
+				return res.status(409).json({ error: "Email already in use" });
+
+			default:
+				return res.status(500).json({ error: "Internal server error" });
+		}
+	}
+}
+
+export async function login(req: Request, res: Response) {
+	const { email, password } = req.body;
+
+	try {
+		const token = await authService.login(email, password);
+		return res.json(token);
+	} catch (err: any) {
+		switch (err.message) {
+			case "INVALID_CREDENTIALS":
+				return res.status(401).json({ error: "Invalid credentials" });
+
+			default:
+				return res.status(500).json({ erro: "Internal server error" });
+		}
 	}
 }
