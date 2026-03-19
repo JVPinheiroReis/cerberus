@@ -12,6 +12,10 @@ const users: User[] = [];
 export async function register(email: string, password: string) {
 	const normalizedEmail = email.toLowerCase();
 
+	if (!email || !password || password.length < 8) {
+		throw new Error("INVALID_CREDENTIALS");
+	}
+
 	const existing = users.find((u) => u.email == normalizedEmail);
 	if (existing) {
 		throw new Error("EMAIL_EXISTS");
