@@ -37,3 +37,13 @@ export async function login(req: Request, res: Response) {
         }
     }
 }
+
+export async function me(req: Request, res: Response) {
+    if (!req.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    return res.json({
+        id: req.user.userId,
+    });
+}
