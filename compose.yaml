@@ -1,0 +1,16 @@
+services:
+    db:
+        image: postgres:18
+        container_name: cerberus-db
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: cerberus
+        ports:
+            - "1000:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql
+
+volumes:
+    postgres_data:
