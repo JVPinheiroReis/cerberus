@@ -1,57 +1,75 @@
 import { comparePassword, hashPassword } from "../utils/hash";
 import { randomUUID } from "crypto";
 import { signToken } from "../utils/jwt";
-
-type User = {
-    id: string;
-    email: string;
-    passwordHash: string;
-};
-
-const users: User[] = [];
+import { InvalidCredentialsError } from "../errors/invalid-credentials.error";
+import { pool } from "../db/client";
+import { EmailAlreadyExistsError } from "../errors/email-already-exists.error";
 
 export async function register(email: string, password: string) {
-    const normalizedEmail = email.toLowerCase();
-
     if (!email || !password || password.length < 8) {
-        throw new Error("INVALID_CREDENTIALS");
+        throw new InvalidCredentialsError();
     }
 
-    const existing = users.find((u) => u.email == normalizedEmail);
-    if (existing) {
-        throw new Error("EMAIL_EXISTS");
-    }
-
+    const normalizedEmail = email.toLowerCase();
     const passwordHash = await hashPassword(password);
 
-    const user: User = {
-        id: randomUUID(),
-        email: normalizedEmail,
-        passwordHash,
-    };
+    try {
+        const result = await pool.query(
+            `
+                INSERT INTO users (id, email, password_hash)
+                VALUES ($1, $2, $3)
+                RETURNING id, email
+            `,
+            [randomUUID(), normalizedEmail, passwordHash],
+        );
 
-    users.push(user);
-
-    return {
-        id: user.id,
-        email: user.email,
-    };
+        return result.rows[0];
+    } catch (err: any) {
+        if (err.code === "23505" && err.constraint === "users_email_unique") {
+            throw new EmailAlreadyExistsError();
+        }
+        throw err;
+    }
 }
 
 export async function login(email: string, password: string) {
     const normalizedEmail = email.toLowerCase();
 
-    const user = users.find((u) => u.email == normalizedEmail);
+    const result = await pool.query(
+        `
+        SELECT id, email, password_hash
+        FROM users
+        WHERE email = $1
+    `,
+        [normalizedEmail],
+    );
+
+    const user = result.rows[0];
     if (!user) {
-        throw new Error("INVALID_CREDENTIALS");
+        throw new InvalidCredentialsError();
     }
 
-    const valid = await comparePassword(password, user.passwordHash);
+    const valid = await comparePassword(password, user.password_hash);
     if (!valid) {
-        throw new Error("INVALID_CREDENTIALS");
+        throw new InvalidCredentialsError();
     }
 
     const token = signToken({ userId: user.id });
 
     return { accessToken: token };
+}
+
+export async function me(userId: string) {
+    const result = await pool.query(
+        `
+        SELECT id, email
+        FROM users
+        WHERE id = $1
+    `,
+        [userId],
+    );
+
+    const user = result.rows[0];
+
+    return user;
 }
