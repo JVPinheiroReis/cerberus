@@ -1,75 +1,75 @@
-import { comparePassword, hashPassword } from "../utils/hash";
-import { randomUUID } from "crypto";
-import { signToken } from "../utils/jwt";
-import { InvalidCredentialsError } from "../errors/invalid-credentials.error";
+import { randomUUID } from "node:crypto";
 import { pool } from "../db/client";
 import { EmailAlreadyExistsError } from "../errors/email-already-exists.error";
+import { InvalidCredentialsError } from "../errors/invalid-credentials.error";
+import { comparePassword, hashPassword } from "../utils/hash";
+import { signToken } from "../utils/jwt";
 
 export async function register(email: string, password: string) {
-    if (!email || !password || password.length < 8) {
-        throw new InvalidCredentialsError();
-    }
+	if (!email || !password || password.length < 8) {
+		throw new InvalidCredentialsError();
+	}
 
-    const normalizedEmail = email.toLowerCase();
-    const passwordHash = await hashPassword(password);
+	const normalizedEmail = email.toLowerCase();
+	const passwordHash = await hashPassword(password);
 
-    try {
-        const result = await pool.query(
-            `
+	try {
+		const result = await pool.query(
+			`
                 INSERT INTO users (id, email, password_hash)
                 VALUES ($1, $2, $3)
                 RETURNING id, email
             `,
-            [randomUUID(), normalizedEmail, passwordHash],
-        );
+			[randomUUID(), normalizedEmail, passwordHash],
+		);
 
-        return result.rows[0];
-    } catch (err: any) {
-        if (err.code === "23505" && err.constraint === "users_email_unique") {
-            throw new EmailAlreadyExistsError();
-        }
-        throw err;
-    }
+		return result.rows[0];
+	} catch (err: any) {
+		if (err.code === "23505" && err.constraint === "users_email_unique") {
+			throw new EmailAlreadyExistsError();
+		}
+		throw err;
+	}
 }
 
 export async function login(email: string, password: string) {
-    const normalizedEmail = email.toLowerCase();
+	const normalizedEmail = email.toLowerCase();
 
-    const result = await pool.query(
-        `
+	const result = await pool.query(
+		`
         SELECT id, email, password_hash
         FROM users
         WHERE email = $1
     `,
-        [normalizedEmail],
-    );
+		[normalizedEmail],
+	);
 
-    const user = result.rows[0];
-    if (!user) {
-        throw new InvalidCredentialsError();
-    }
+	const user = result.rows[0];
+	if (!user) {
+		throw new InvalidCredentialsError();
+	}
 
-    const valid = await comparePassword(password, user.password_hash);
-    if (!valid) {
-        throw new InvalidCredentialsError();
-    }
+	const valid = await comparePassword(password, user.password_hash);
+	if (!valid) {
+		throw new InvalidCredentialsError();
+	}
 
-    const token = signToken({ userId: user.id });
+	const token = signToken({ userId: user.id });
 
-    return { accessToken: token };
+	return { accessToken: token };
 }
 
 export async function me(userId: string) {
-    const result = await pool.query(
-        `
+	const result = await pool.query(
+		`
         SELECT id, email
         FROM users
         WHERE id = $1
     `,
-        [userId],
-    );
+		[userId],
+	);
 
-    const user = result.rows[0];
+	const user = result.rows[0];
 
-    return user;
+	return user;
 }

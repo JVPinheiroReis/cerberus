@@ -22,11 +22,14 @@ Simple authentication API built with **Node.js**, **TypeScript**, and **JWT**.
 ## Getting Started
 
 1. Install dependencies:
+
     ```bash
     pnpm install
     ```
+
 2. Configure the database (see `compose.yaml` and `src/db/schema.sql`).
 3. Start the development server:
+
     ```bash
     pnpm dev
     ```

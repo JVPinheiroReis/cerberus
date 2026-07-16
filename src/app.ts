@@ -1,6 +1,6 @@
 import express from "express";
-import routes from "./routes";
 import { timeLogger } from "./middlewares/timeLogger.middleware";
+import routes from "./routes";
 
 const app = express();
 

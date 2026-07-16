@@ -1,10 +1,10 @@
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { pool } from "./client";
-import path from "path";
 
 export async function initDb() {
-    const filePath = path.join(__dirname, "schema.sql");
-    const sql = readFileSync(filePath, "utf-8");
+	const filePath = path.join(__dirname, "schema.sql");
+	const sql = readFileSync(filePath, "utf-8");
 
-    await pool.query(sql);
+	await pool.query(sql);
 }

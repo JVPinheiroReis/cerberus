@@ -1,13 +1,13 @@
 {
-    "compilerOptions": {
-        "target": "ES2020",
-        "module": "CommonJS",
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "strict": true,
-        "esModuleInterop": true,
-        "typeRoots": ["./node_modules/@types", "./src/types"]
-    },
-    "include": ["src/**/*.ts", "src/**/*.d.ts"],
-    "files": ["src/types/express.d.ts"]
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "CommonJS",
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"strict": true,
+		"esModuleInterop": true,
+		"typeRoots": ["./node_modules/@types", "./src/types"]
+	},
+	"include": ["src/**/*.ts", "src/**/*.d.ts"],
+	"files": ["src/types/express.d.ts"]
 }
